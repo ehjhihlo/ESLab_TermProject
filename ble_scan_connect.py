@@ -146,11 +146,23 @@ while True:
         #if flag == 1:
             #cv2.imwrite("image.png", image)
 
-        
         #ch = dev.getCharacteristics(uuid=UUID(0xfff4))[0]
         #if (ch.supportsRead()):
         #print(ch.read())
         print("waiting")
+        
+        
+    # TODO:1 receive alarm_signal from PC through socket
+    alarm_signal=0    
+        
+    # if receive alarm_signal==1 through socket from PC, 
+    # then send alarm_signal==1 through BLE to STM32:
+    # That is write 1 to characteristic uuid=0x2A39 to STM32
+    # TODO:2 check UUID of characteristic
+    if alarm_signal==1:
+        ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
+        ch.write('1'.encode('utf-8'))
+        print("write 1 to STM32")
 
 
 #finally:
