@@ -17,7 +17,6 @@
  */
 
 /* MBED_DEPRECATED */
-#include <cstdint>
 #warning "These services are deprecated and will be removed. Please see services.md for details about replacement services."
 
 #ifndef MBED_BLE_HEART_RATE_SERVICE_H__
@@ -121,6 +120,7 @@ public:
      * sensor.
      * @param[in] location Intended location of the heart rate sensor.
      */
+
     HeartRateService(BLE &_ble, uint16_t hrmCounter, BodySensorLocation location) :
         ble(_ble),
         valueBytes(hrmCounter),
@@ -130,12 +130,12 @@ public:
             valueBytes.getNumValueBytes(),
             HeartRateValueBytes::MAX_VALUE_BYTES,
             GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY
-            // 0X1A
         ),
         hrmLocation(
             GattCharacteristic::UUID_BODY_SENSOR_LOCATION_CHAR,
             reinterpret_cast<uint8_t*>(&location)
-        )
+        ),
+        controlPoint(GattCharacteristic::UUID_HEART_RATE_CONTROL_POINT_CHAR, &controlPointValue)
     {
         setupService();
     }
@@ -153,18 +153,13 @@ public:
      * @attention This function must be called in the execution context of the
      * BLE stack.
      */
-    // void updateHeartRate(int16_t* hrmCounter) {
     void updateHeartRate(uint16_t hrmCounter) {
-       valueBytes.updateHeartRate(hrmCounter);
+        valueBytes.updateHeartRate(hrmCounter);
         ble.gattServer().write(
             hrmRate.getValueHandle(),
             valueBytes.getPointer(),
             valueBytes.getNumValueBytes()
-            // (uint8_t*)hrmCounter,
-            // 6
         );
-
-        // printf("%d, %p, %p ", sizeof(hrmCounter)*3, valueBytes.getPointer(), (hrmCounter));
     }
 
 protected:
@@ -174,7 +169,8 @@ protected:
     void setupService() {
         GattCharacteristic *charTable[] = {
             &hrmRate,
-            &hrmLocation
+            &hrmLocation,
+            &controlPoint
         };
         GattService hrmService(
             GattService::UUID_HEART_RATE_SERVICE,
@@ -191,7 +187,7 @@ protected:
      */
     struct HeartRateValueBytes {
         /* 1 byte for the Flags, and up to two bytes for heart rate value. */
-        static const unsigned MAX_VALUE_BYTES = 100;
+        static const unsigned MAX_VALUE_BYTES = 3;
         static const unsigned FLAGS_BYTE_INDEX = 0;
 
         static const unsigned VALUE_FORMAT_BITNUM = 0;
@@ -233,15 +229,17 @@ protected:
             }
         }
 
-    //private:
+    private:
         uint8_t valueBytes[MAX_VALUE_BYTES];
     };
 
 protected:
     BLE &ble;
+    uint8_t controlPointValue;
     HeartRateValueBytes valueBytes;
     GattCharacteristic hrmRate;
     ReadOnlyGattCharacteristic<uint8_t> hrmLocation;
+    WriteOnlyGattCharacteristic<uint8_t> controlPoint;
 };
 
 #endif // BLE_FEATURE_GATT_SERVER
