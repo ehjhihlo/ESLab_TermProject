@@ -168,6 +168,30 @@ public:
         // printf("%d, %p, %p ", sizeof(hrmCounter)*3, valueBytes.getPointer(), (hrmCounter));
     }
 
+    /**
+     * Get the current value of the control point.
+     *
+     * @return The current value of the control point.
+     */
+    uint8_t getControlPointValue() const {
+        return controlPointValue;
+    }
+
+    /**
+     * This callback allows the heart rate service to receive updates to the
+     * controlPoint characteristic.
+     *
+     * @param[in] params
+     *     Information about the characterisitc being updated.
+     */
+    virtual void onDataWritten(const GattWriteCallbackParams *params) {
+        if (params->handle == controlPoint.getValueAttribute().getHandle()) { 
+            controlPointValue = params->data[0];
+        }
+    }
+
+
+
 protected:
     /**
      * Construct and add to the GattServer the heart rate service.
