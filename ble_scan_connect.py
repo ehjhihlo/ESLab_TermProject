@@ -18,6 +18,7 @@ import base64
 flag = 0
 sio = socketio.Client()
 
+
 @sio.event
 def connect():
     print("Connected to server")
@@ -25,6 +26,15 @@ def connect():
 @sio.event
 def disconnect():
     print("Disconnected from server")
+
+
+
+
+# global alarm flag
+# wait for alarm signal from PC through socket
+alarm = 0  
+
+
 
 
 class NewDelegate(btle.DefaultDelegate):
@@ -66,6 +76,41 @@ class ScanDelegate(DefaultDelegate):
             print ("Discovered device", dev.addr)
         elif isNewData:
             print ("Received new data from", dev.addr)
+
+
+# Convert bytes received to an integer
+def bytes_to_int(bytes):
+	result = 0
+	for b in bytes:
+		result = result * 10 + int(b)
+	return result
+
+
+# conn: socket connection
+# dev: BLE device
+def wait_for_alarm(conn, dev):
+    global alarm
+    while True:
+        print("waiting for alarm")
+        while True:
+            try:
+                # 1/0
+                alarm = bytes_to_int(conn.recv(1024))
+                break
+            except:
+                pass
+        if alarm == 1:
+            print("alarm flag==1")
+            ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
+            ch.write('1'.encode('utf-8'))
+            print("write 1 to STM32")
+        else:
+            print("alarm flag==0")
+        time.sleep(1)
+
+
+
+
 
 scanner = Scanner().withDelegate(ScanDelegate())
 devices = scanner.scan(3.0)
@@ -153,16 +198,20 @@ while True:
         
         
     # TODO:1 receive alarm_signal from PC through socket
-    alarm_signal=0    
+    # alarm_signal=0    
         
     # if receive alarm_signal==1 through socket from PC, 
     # then send alarm_signal==1 through BLE to STM32:
     # That is write 1 to characteristic uuid=0x2A39 to STM32
     # TODO:2 check UUID of characteristic
-    if alarm_signal==1:
-        ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
-        ch.write('1'.encode('utf-8'))
-        print("write 1 to STM32")
+    # if alarm_signal==1:
+    #     ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
+    #     ch.write('1'.encode('utf-8'))
+    #     print("write 1 to STM32")
+    
+    # uncomment the following line to test the socket connection
+    # wait_for_alarm(conn, dev)
+
 
 
 #finally:
