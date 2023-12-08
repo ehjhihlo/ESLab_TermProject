@@ -51,11 +51,12 @@ public:
         _heartrate_value(10000),
         _heartrate_service(ble, _heartrate_value, HeartRateService::LOCATION_FINGER),
         _adv_data_builder(_adv_buffer)
-    {
-    }
-        void onDataWrittenCallback(const GattWriteCallbackParams *params) {
-        printf("data written");
-    }
+    {}
+    
+    // void onDataWrittenCallback(const GattWriteCallbackParams *params) {
+    //     printf("data written");
+    // }
+
     void start()
     {
         _ble.init(this, &HeartrateDemo::on_init_complete);

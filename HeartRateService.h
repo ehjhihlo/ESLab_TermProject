@@ -209,6 +209,7 @@ protected:
         );
 
         ble.gattServer().addService(hrmService);
+        ble.gattServer().setEventHandler(this);
     }
 
 protected:
