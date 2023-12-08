@@ -65,7 +65,11 @@
  * @attention The heart rate profile limits the number of instantiations of the
  * heart rate services to one.
  */
-class HeartRateService {
+
+ 
+class HeartRateService : public GattServer::EventHandler {
+    const static uint16_t EXAMPLE_SERVICE_UUID         = 0xA000;
+    const static uint16_t WRITABLE_CHARACTERISTIC_UUID = 0xA001;
 public:
     /**
      * Intended location of the heart rate sensor.
@@ -138,6 +142,14 @@ public:
         ),
         controlPoint(GattCharacteristic::UUID_HEART_RATE_CONTROL_POINT_CHAR, &controlPointValue)
     {
+        
+        const UUID uuid = WRITABLE_CHARACTERISTIC_UUID;
+        _writable_characteristic = new ReadWriteGattCharacteristic<uint8_t> (uuid, &_characteristic_value);
+
+        if (!_writable_characteristic) {
+            printf("Allocation of ReadWriteGattCharacteristic failed\r\n");
+        }
+
         setupService();
     }
 
@@ -184,12 +196,26 @@ public:
      * @param[in] params
      *     Information about the characterisitc being updated.
      */
-    virtual void onDataWritten(const GattWriteCallbackParams *params) {
-        if (params->handle == controlPoint.getValueAttribute().getHandle()) { 
-            controlPointValue = params->data[0];
+    // virtual void onDataWritten(const GattWriteCallbackParams *params) {
+    //     printf("onDataWriten"); 
+    //     if (params->handle == controlPoint.getValueAttribute().getHandle()) {
+    //         printf("on dataWriten"); 
+    //         controlPointValue = params->data[0];
+    //     }
+    // }
+protected:
+    /**
+     * This callback allows the LEDService to receive updates to the ledState Characteristic.
+     *
+     * @param[in] params Information about the characterisitc being updated.
+     */
+    virtual void onDataWritten(const GattWriteCallbackParams &params)
+    {
+        if ((params.handle == _writable_characteristic->getValueHandle()) && (params.len == 1)) {
+            printf("New characteristic value written: %x\r\n", *(params.data));
+            controlPointValue = *(params.data);
         }
     }
-
 
 
 protected:
@@ -209,7 +235,18 @@ protected:
         );
 
         ble.gattServer().addService(hrmService);
+
+        const UUID uuid = EXAMPLE_SERVICE_UUID;
+        GattCharacteristic* charTable2[] = { _writable_characteristic };
+        GattService example_service(uuid, charTable2, 1);
+
+        ble.gattServer().addService(example_service);
+
+
         ble.gattServer().setEventHandler(this);
+
+        printf("Example service added with UUID 0xA000\r\n");
+        printf("Connect and write to characteristic 0xA001\r\n");
     }
 
 protected:
@@ -271,6 +308,9 @@ protected:
     GattCharacteristic hrmRate;
     ReadOnlyGattCharacteristic<uint8_t> hrmLocation;
     WriteOnlyGattCharacteristic<uint8_t> controlPoint;
+
+    ReadWriteGattCharacteristic<uint8_t> *_writable_characteristic = nullptr;
+    uint8_t _characteristic_value = 0;
 };
 
 #endif // BLE_FEATURE_GATT_SERVER

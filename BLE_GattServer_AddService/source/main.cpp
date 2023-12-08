@@ -57,6 +57,8 @@ public:
     //     printf("data written");
     // }
 
+
+
     void start()
     {
         _ble.init(this, &HeartrateDemo::on_init_complete);
@@ -150,6 +152,9 @@ public:
     void update_sensor_value()
     {
         /* you can read in the real value but here we just simulate a value */
+        printf("getControlPointValue = %d\n", _heartrate_service.getControlPointValue());
+
+
         _heartrate_value++;
         float sensor_value = 0;
         int16_t pDataXYZ[3] = {0};
