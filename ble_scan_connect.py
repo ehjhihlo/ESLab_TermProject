@@ -2,6 +2,7 @@ from bluepy.btle import Peripheral, UUID
 from bluepy.btle import Scanner, DefaultDelegate
 from bluepy import btle
 import struct
+import json
 
 import picamera
 from picamera.array import PiRGBArray 
@@ -15,26 +16,32 @@ import socketio
 import cv2
 import base64
 
-flag = 0
-sio = socketio.Client()
 
+global dev
+
+flag = 0
+import socketio
+
+sio = socketio.Client()
 
 @sio.event
 def connect():
-    print("Connected to server")
+    print("Connected to the server")
 
 @sio.event
 def disconnect():
-    print("Disconnected from server")
+    print("Disconnected from the server")
 
+@sio.event
+def receive(data):
+    print("result:",data)
+    if data==True:
+        ch = dev.getCharacteristics(uuid=UUID(0xA001))[0]
+        ch.write(b"\x01")
 
-
-
-# global alarm flag
-# wait for alarm signal from PC through socket
-alarm = 0  
-
-
+#server_address = "http://192.168.11.12:3000"
+server_address = "http://192.168.0.186:3000"
+sio.connect(server_address)
 
 
 class NewDelegate(btle.DefaultDelegate):
@@ -59,10 +66,15 @@ class NewDelegate(btle.DefaultDelegate):
             img = cv2.imread('detect_faces/image'+str(PictureNum)+'.jpg')
             #cv2.imwrite(f"detect_faces/image.png", image)
             img = cv2.resize(img, (160, 160), interpolation=cv2.INTER_AREA)
-            img = base64.b64encode(img.tobytes()).decode('utf-8')
-            print(img)
+            #img = base64.b64encode(img.tobytes()).decode('utf-8')
+            #print(img)
+            #img = img.reshape(1, 25600)
             # Send the image to the PC
-            sio.emit('image', img)
+            #print(img.shape)
+            #img = img.reshape(-1)
+            #img_string = img.tostring()
+            img_json = json.dumps(img.tolist())
+            sio.emit("image", img_json)
         else:
             flag = 0
         print('flag = ', flag)
@@ -76,41 +88,6 @@ class ScanDelegate(DefaultDelegate):
             print ("Discovered device", dev.addr)
         elif isNewData:
             print ("Received new data from", dev.addr)
-
-
-# Convert bytes received to an integer
-def bytes_to_int(bytes):
-	result = 0
-	for b in bytes:
-		result = result * 10 + int(b)
-	return result
-
-
-# conn: socket connection
-# dev: BLE device
-def wait_for_alarm(conn, dev):
-    global alarm
-    while True:
-        print("waiting for alarm")
-        while True:
-            try:
-                # 1/0
-                alarm = bytes_to_int(conn.recv(1024))
-                break
-            except:
-                pass
-        if alarm == 1:
-            print("alarm flag==1")
-            ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
-            ch.write('1'.encode('utf-8'))
-            print("write 1 to STM32")
-        else:
-            print("alarm flag==0")
-        time.sleep(1)
-
-
-
-
 
 scanner = Scanner().withDelegate(ScanDelegate())
 devices = scanner.scan(3.0)
@@ -162,9 +139,6 @@ notify = dev.getCharacteristics(uuid=0x2a37)[0]
 notify_handle = notify.getHandle() + 1
 dev.writeCharacteristic(notify_handle, setup_data, withResponse=True)
 
-server_url = 'http://192.168.0.104:5000'  # Replace with your PC's IP address
-sio.connect(server_url)
-
 while True:
 #for frame in camera.capture_continuous(raw_capture, format="bgr", use_video_port=True):
     #for ch in dev.getCharacteristics(uuid=UUID(0xfff4)):
@@ -191,28 +165,17 @@ while True:
         #if flag == 1:
             #cv2.imwrite("image.png", image)
 
+        # pseudo for testing write characteristic to server
+        # ch = dev.getCharacteristics(uuid=UUID(0xA001))[0]
+        # # print(ch)
+        # ch.write(b"\x01")
+        # #print('write 1 to stm')
+        
         #ch = dev.getCharacteristics(uuid=UUID(0xfff4))[0]
         #if (ch.supportsRead()):
         #print(ch.read())
-        print("waiting")
-        
-        
-    # TODO:1 receive alarm_signal from PC through socket
-    # alarm_signal=0    
-        
-    # if receive alarm_signal==1 through socket from PC, 
-    # then send alarm_signal==1 through BLE to STM32:
-    # That is write 1 to characteristic uuid=0x2A39 to STM32
-    # TODO:2 check UUID of characteristic
-    # if alarm_signal==1:
-    #     ch = dev.getCharacteristics(uuid=UUID(0x2A39))[0]
-    #     ch.write('1'.encode('utf-8'))
-    #     print("write 1 to STM32")
-    
-    # uncomment the following line to test the socket connection
-    # wait_for_alarm(conn, dev)
+    print("waiting")
 
-
-
+sio.disconnect()
 #finally:
     #dev.disconnect() 
