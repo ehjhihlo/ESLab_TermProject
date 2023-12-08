@@ -35,7 +35,7 @@ def image(sid, data):
     # print(img.shape)
     cv2.imwrite(f"./images/img_{count}.png", img)
     print(f'image {count} saved!!')
-
+    sio.emit('receive', 'photo received')
 
 if __name__ == '__main__':
     port = 3000
