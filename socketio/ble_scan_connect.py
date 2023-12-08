@@ -29,6 +29,10 @@ def connect():
 def disconnect():
     print("Disconnected from the server")
 
+@sio.event
+def receive(data):
+    print(data)
+
 #server_address = "http://192.168.11.12:3000"
 server_address = "http://192.168.0.186:3000"
 sio.connect(server_address)
