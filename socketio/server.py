@@ -3,6 +3,7 @@ import eventlet
 import numpy as np
 import json
 import cv2
+from faceRecognition.faceRecognizer import FaceRecognition
 
 sio = socketio.Server()
 app = socketio.WSGIApp(sio)
@@ -35,7 +36,9 @@ def image(sid, data):
     # print(img.shape)
     cv2.imwrite(f"./images/img_{count}.png", img)
     print(f'image {count} saved!!')
-    sio.emit('receive', 'photo received')
+    alert, img_save_name = FaceRecognition(f"./images/img_{count}.png")
+    print("alert: ", alert)
+    sio.emit('receive', json.dumps(alert))
 
 if __name__ == '__main__':
     port = 3000
