@@ -15,7 +15,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "mbed.h"
 #include <cstdio>
 #include <events/mbed_events.h>
 #include "ble/BLE.h"
@@ -39,9 +39,14 @@ const static char DEVICE_NAME[] = "EnJhih";
 
 static events::EventQueue event_queue(/* event count */ 16 * EVENTS_EVENT_SIZE);
 
-
+static DigitalOut pin1(PWM_OUT);
 int16_t pDataXYZ_prev[3] = {0};
 
+void buzz(){
+    pin1=!pin1;
+    wait_us(5000000);
+    pin1=!pin1;
+}
 class HeartrateDemo : ble::Gap::EventHandler {
 public:
     HeartrateDemo(BLE &ble, events::EventQueue &event_queue) :
