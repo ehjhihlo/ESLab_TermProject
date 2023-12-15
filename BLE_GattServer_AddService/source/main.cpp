@@ -39,14 +39,16 @@ const static char DEVICE_NAME[] = "EnJhih";
 
 static events::EventQueue event_queue(/* event count */ 16 * EVENTS_EVENT_SIZE);
 
-static DigitalOut pin1(PWM_OUT);
+static DigitalOut pin1(D9);
 int16_t pDataXYZ_prev[3] = {0};
+int16_t alarm = 0;
 
 void buzz(){
     pin1=!pin1;
-    wait_us(5000000);
+    wait_us(5000000); //5sec
     pin1=!pin1;
 }
+
 class HeartrateDemo : ble::Gap::EventHandler {
 public:
     HeartrateDemo(BLE &ble, events::EventQueue &event_queue) :
@@ -156,9 +158,6 @@ public:
 
     void update_sensor_value()
     {
-        /* you can read in the real value but here we just simulate a value */
-        printf("getControlPointValue = %d\n", _heartrate_service.getControlPointValue());
-
 
         _heartrate_value++;
         float sensor_value = 0;
@@ -208,6 +207,18 @@ public:
         printf("flag = %d\n", flag);
         // itoa(flag,flagbuffer,DECIMAL);
         _heartrate_service.updateHeartRate(flag);
+
+
+        /* you can read in the real value but here we just simulate a value */
+        printf("getControlPointValue = %d\n", _heartrate_service.getControlPointValue());
+        alarm = _heartrate_service.getControlPointValue();
+        if (alarm==1) {
+            buzz();
+            alarm=0;
+            
+        }
+
+
     }
 
     /* these implement ble::Gap::EventHandler */

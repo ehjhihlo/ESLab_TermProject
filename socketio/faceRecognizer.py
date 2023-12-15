@@ -29,7 +29,6 @@ def FaceRecognition(test_img_path):
     # print(dataset)
     
     # define test image
-    # assume that the test image is in the folder ./unknown
     test_img = Image.open(test_img_path)
     test_img_corpped_save_path = os.path.join(os.path.dirname(test_img_path), os.path.basename(test_img_path).split('.')[0] + '_corpped.jpg')
     test_img_cropped = mtcnn(test_img, save_path=test_img_corpped_save_path)
@@ -41,35 +40,32 @@ def FaceRecognition(test_img_path):
     for x, y in database_loader:
         x_aligned, prob = mtcnn(x, return_prob=True)
         if x_aligned is not None:
-            # print('Face detected with probability: {:8f}'.format(prob))
             database_aligned.append(x_aligned)
             database_names.append(dataset.idx_to_class[y])
             
     database_aligned = torch.stack(database_aligned).to(device)
     database_embeddings = resnet(database_aligned).detach().cpu()
     
-    # print(database_embeddings.shape)
-    # print(test_img_embedding.shape)
+
     alert = True
     img_save_name = None
     for idx, e1 in enumerate(database_embeddings):
-        for e2 in test_img_embedding:
-            dist = (e1 - e2).norm().item()
-            # print(dist)
-            if dist < 0.9:
-                # print('face matched')
-                alert = False 
-                print('matched: ', database_names[idx]) # name
-                # current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") # time
-                # print(current_time)
-                # img_save_name = f'{database_names[idx]}-{current_time}' + '.jpg'
-                # print(img_save_name)
-                break #TODO: save time, name & picture in database
-            else:
-                # print('face not matched')
-                continue
+        # for e2 in test_img_embedding:
+        dist = (e1 - test_img_embedding).norm().item()
+        # print(dist)
+        if dist < 0.9:
+            # print('face matched')
+            alert = False 
+            print('matched: ', database_names[idx]) # name
+            # current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") # time
+            # print(current_time)
+            # img_save_name = f'{database_names[idx]}-{current_time}' + '.jpg'
+            # print(img_save_name)
+            break #TODO: save time, name & picture in database
+        else:
+            # print('face not matched')
+            continue
 
-    # TODO: send alert to server
     # print("alert: ", alert)
     return alert
     # return alert, img_save_name
