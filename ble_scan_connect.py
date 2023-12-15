@@ -49,11 +49,8 @@ class NewDelegate(btle.DefaultDelegate):
         btle.DefaultDelegate.__init__(self)
 
     def handleNotification(self, handle, data):
-        #print(data)
-        # data1, data2, data3 = struct.unpack('<3h', data)
-        data = struct.unpack('<h', data)[0]/(2**8)
-        #data = int.from_bytes(bytes, byteorder='little')
-        
+
+        data = struct.unpack('<h', data)[0]/(2**8)       
         print(f"Notification, handle: {handle}, data:{data}")
         if data == 1:
             flag = 1
@@ -64,15 +61,7 @@ class NewDelegate(btle.DefaultDelegate):
                 camera.capture('detect_faces/image'+str(PictureNum)+'.jpg')
                 PictureNum = 1
             img = cv2.imread('detect_faces/image'+str(PictureNum)+'.jpg')
-            #cv2.imwrite(f"detect_faces/image.png", image)
             img = cv2.resize(img, (160, 160), interpolation=cv2.INTER_AREA)
-            #img = base64.b64encode(img.tobytes()).decode('utf-8')
-            #print(img)
-            #img = img.reshape(1, 25600)
-            # Send the image to the PC
-            #print(img.shape)
-            #img = img.reshape(-1)
-            #img_string = img.tostring()
             img_json = json.dumps(img.tolist())
             sio.emit("image", img_json)
         else:
