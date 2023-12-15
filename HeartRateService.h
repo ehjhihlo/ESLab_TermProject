@@ -68,8 +68,11 @@
 
  
 class HeartRateService : public GattServer::EventHandler {
+
     const static uint16_t EXAMPLE_SERVICE_UUID         = 0xA000;
     const static uint16_t WRITABLE_CHARACTERISTIC_UUID = 0xA001;
+
+
 public:
     /**
      * Intended location of the heart rate sensor.
@@ -139,8 +142,8 @@ public:
         hrmLocation(
             GattCharacteristic::UUID_BODY_SENSOR_LOCATION_CHAR,
             reinterpret_cast<uint8_t*>(&location)
-        ),
-        controlPoint(GattCharacteristic::UUID_HEART_RATE_CONTROL_POINT_CHAR, &controlPointValue)
+        )
+        // controlPoint(GattCharacteristic::UUID_HEART_RATE_CONTROL_POINT_CHAR, &controlPointValue)
     {
         
         const UUID uuid = WRITABLE_CHARACTERISTIC_UUID;
@@ -226,7 +229,7 @@ protected:
         GattCharacteristic *charTable[] = {
             &hrmRate,
             &hrmLocation,
-            &controlPoint
+            // &controlPoint
         };
         GattService hrmService(
             GattService::UUID_HEART_RATE_SERVICE,
@@ -240,10 +243,10 @@ protected:
         GattCharacteristic* charTable2[] = { _writable_characteristic };
         GattService example_service(uuid, charTable2, 1);
 
+
         ble.gattServer().addService(example_service);
-
-
         ble.gattServer().setEventHandler(this);
+
 
         printf("Example service added with UUID 0xA000\r\n");
         printf("Connect and write to characteristic 0xA001\r\n");
@@ -301,13 +304,16 @@ protected:
         uint8_t valueBytes[MAX_VALUE_BYTES];
     };
 
+public:
+    uint8_t              controlPointValue;
+
 protected:
     BLE &ble;
     HeartRateValueBytes valueBytes;
-    uint8_t              controlPointValue;
+    // uint8_t              controlPointValue;
     GattCharacteristic hrmRate;
     ReadOnlyGattCharacteristic<uint8_t> hrmLocation;
-    WriteOnlyGattCharacteristic<uint8_t> controlPoint;
+    // WriteOnlyGattCharacteristic<uint8_t> controlPoint;
 
     ReadWriteGattCharacteristic<uint8_t> *_writable_characteristic = nullptr;
     uint8_t _characteristic_value = 0;

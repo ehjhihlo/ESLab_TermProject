@@ -60,9 +60,10 @@ public:
         _adv_data_builder(_adv_buffer)
     {}
     
-    // void onDataWrittenCallback(const GattWriteCallbackParams *params) {
-    //     printf("data written");
-    // }
+    void onDataWrittenCallback(const GattWriteCallbackParams *params) {
+        printf("onDataWrittenCallback data written");
+        // buzz();
+    }
 
 
 
@@ -99,7 +100,7 @@ public:
 
         /* heart rate value updated every second */
         _event_queue.call_every(
-            1000ms,
+            1500ms,
             [this] {
                 update_sensor_value();
             }
@@ -211,10 +212,17 @@ public:
 
         /* you can read in the real value but here we just simulate a value */
         printf("getControlPointValue = %d\n", _heartrate_service.getControlPointValue());
+        printf("getControlPointValue = %d\n", _heartrate_service.controlPointValue);
         alarm = _heartrate_service.getControlPointValue();
+        // if (_heartrate_service.getControlPointValue()==1) {
+        //     buzz();
+        //     // alarm=0;
+            
+        // }
+
         if (alarm==1) {
             buzz();
-            alarm=0;
+            _heartrate_service.controlPointValue=0;
             
         }
 
