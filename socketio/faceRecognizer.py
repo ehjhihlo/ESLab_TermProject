@@ -9,6 +9,12 @@ from datetime import datetime
 
 
 def FaceRecognition(test_img_path):
+    # record file name, time, and picture in database
+    try:
+        os.mkdir('./database') # create a folder to save database
+    except:
+        pass
+    
     # define environment
     workers = 0 if os.name == 'nt' else 4
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -23,7 +29,7 @@ def FaceRecognition(test_img_path):
     resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
     
     # define database loader
-    dataset = datasets.ImageFolder('./faceRecognition/test_images') # assume that the database is in the folder ./data/test_images
+    dataset = datasets.ImageFolder('./faceRecognition/authorized_face') # assume that the database is in the folder ./data/test_images
     dataset.idx_to_class = {i:c for c, i in dataset.class_to_idx.items()}
     database_loader = DataLoader(dataset, collate_fn=collate_fn, num_workers=workers)
     # print(dataset)
@@ -57,16 +63,28 @@ def FaceRecognition(test_img_path):
             # print('face matched')
             alert = False 
             print('matched: ', database_names[idx]) # name
-            # current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") # time
+            current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") # time
             # print(current_time)
-            # img_save_name = f'{database_names[idx]}-{current_time}' + '.jpg'
-            # print(img_save_name)
-            break #TODO: save time, name & picture in database
+            record = f'{database_names[idx]}-{current_time}'
+            # Open the file in 'a' (append) mode, creating it if it doesn't exist
+            with open('./database/record.txt', 'a') as file:
+                # Append the sentence followed by a newline character
+                file.write(record + '\n')
+            break
         else:
             # print('face not matched')
             continue
 
     # print("alert: ", alert)
+    if alert:
+        current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S") # time
+        # print(current_time)
+        record = f'stranger-{current_time}'
+        # Open the file in 'a' (append) mode, creating it if it doesn't exist
+        with open('./database/record.txt', 'a') as file:
+            # Append the sentence followed by a newline character
+            file.write(record + '\n')
+        
     return alert
     # return alert, img_save_name
 
