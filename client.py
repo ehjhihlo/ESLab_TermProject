@@ -2,7 +2,7 @@ import socketio
 import cv2
 import json
 import time
-
+print("hi")
 sio = socketio.Client()
 
 @sio.event
