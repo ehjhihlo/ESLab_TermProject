@@ -56,11 +56,11 @@ def register_database_image(sid, data):
     img = np.array(data_load["image"])
     # Create a directory for the authorized face if it doesn't exist
     try:
-        os.makedirs('./faceRecognition/authorized_face/' + name)
+        os.makedirs('../faceRecognition/authorized_face/' + name)
     except:
         pass
     # Save the image to the specified path
-    cv2.imwrite(f'./faceRecognition/authorized_face/{name}/1.png', img)
+    cv2.imwrite(f'../faceRecognition/authorized_face/{name}/1.png', img)
     print(f'new image: {name} saved in database!!')
 
 
